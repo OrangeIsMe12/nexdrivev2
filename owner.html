@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexDrive — Dashboard Propriétaire</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --black: #06090f;
+            --dark: #0b1120;
+            --dark2: #0f1829;
+            --blue: #1a3272;
+            --blue2: #1e3d8f;
+            --accent: #3a6fd8;
+            --white: #f8f9fc;
+            --text: rgba(248, 249, 252, 0.82);
+            --muted: rgba(248, 249, 252, 0.42);
+            --dim: rgba(248, 249, 252, 0.18);
+            --border: rgba(248, 249, 252, 0.07);
+        }
+        
+        body {
+            background: var(--black);
+            color: var(--text);
+            font-family: 'Raleway', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* TOPBAR */
+        
+        .topbar {
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 36px;
+            background: var(--dark);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .logo-mark {
+            width: 2px;
+            height: 24px;
+            background: var(--accent);
+        }
+        
+        .logo-text {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 7px;
+            color: var(--white);
+            text-transform: uppercase;
+        }
+        
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .owner-badge {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(58, 109, 216, 0.12);
+            border: 1px solid rgba(58, 109, 216, 0.25);
+            padding: 5px 14px;
+        }
+        
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: 'Raleway', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 8px 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-logout:hover {
+            border-color: var(--muted);
+            color: var(--white);
+        }
+        /* LAYOUT */
+        
+        .app {
+            display: flex;
+            padding-top: 68px;
+            min-height: 100vh;
+        }
+        /* SIDEBAR */
+        
+        .sidebar {
+            width: 210px;
+            flex-shrink: 0;
+            background: var(--dark);
+            border-right: 1px solid var(--border);
+            padding: 32px 0;
+            position: fixed;
+            top: 68px;
+            bottom: 0;
+            overflow-y: auto;
+        }
+        
+        .sidebar-label {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--dim);
+            padding: 0 24px;
+            margin-bottom: 12px;
+            margin-top: 24px;
+            display: block;
+        }
+        
+        .sidebar-label:first-child {
+            margin-top: 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            border-left: 2px solid transparent;
+        }
+        
+        .nav-item:hover {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .nav-item.active {
+            color: var(--white);
+            border-left-color: var(--accent);
+            background: rgba(58, 109, 216, 0.08);
+        }
+        
+        .nav-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        
+        .nav-item.active .nav-dot {
+            background: var(--accent);
+        }
+        /* MAIN */
+        
+        .main {
+            flex: 1;
+            margin-left: 210px;
+            padding: 48px;
+            min-height: calc(100vh - 68px);
+        }
+        /* PANELS */
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active {
+            display: block;
+        }
+        /* PAGE TITLE */
+        
+        .panel-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 40px;
+            font-weight: 300;
+            color: var(--white);
+            margin-bottom: 6px;
+        }
+        
+        .panel-title em {
+            font-style: italic;
+            color: var(--muted);
+        }
+        
+        .panel-sub {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            font-style: italic;
+            color: var(--dim);
+            margin-bottom: 48px;
+        }
+        /* KPI CARDS */
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            margin-bottom: 48px;
+        }
+        
+        .kpi-card {
+            background: var(--dark);
+            padding: 28px 24px;
+        }
+        
+        .kpi-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 44px;
+            font-weight: 300;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .kpi-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        /* TABLE */
+        
+        .table-wrap {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead tr {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            text-align: left;
+            padding: 14px 24px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--dim);
+        }
+        
+        td {
+            padding: 16px 24px;
+            font-size: 13px;
+            font-weight: 300;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .td-name {
+            font-weight: 500;
+            color: var(--white);
+        }
+        
+        .td-sub {
+            font-size: 11px;
+            color: var(--dim);
+            margin-top: 2px;
+        }
+        
+        .td-ref {
+            font-family: 'Raleway', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--accent);
+        }
+        
+        .td-amount {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 300;
+            color: var(--white);
+        }
+        /* STATUS BADGE */
+        
+        .badge {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+        }
+        
+        .badge-pending {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            color: #fcd34d;
+        }
+        
+        .badge-confirmed {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        
+        .badge-cancelled {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+        
+        .badge-available {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        
+        .badge-unavailable {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+        
+        .badge-active {
+            background: rgba(58, 109, 216, 0.1);
+            border: 1px solid rgba(58, 109, 216, 0.25);
+            color: var(--accent);
+        }
+        
+        .badge-inactive {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--dim);
+        }
+        /* SECTION HEADER */
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 32px;
+        }
+        /* BTN */
+        
+        .btn-add {
+            background: var(--blue);
+            color: white;
+            border: 1px solid var(--blue);
+            padding: 11px 28px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        
+        .btn-add:hover {
+            background: var(--blue2);
+            border-color: var(--blue2);
+        }
+        
+        .btn-edit {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 7px 16px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-edit:hover {
+            border-color: var(--muted);
+            color: var(--white);
+        }
+        
+        .btn-delete {
+            background: transparent;
+            color: rgba(239, 68, 68, 0.6);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            padding: 7px 16px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-delete:hover {
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+        
+        .btn-row-actions {
+            display: flex;
+            gap: 8px;
+        }
+        /* MODAL */
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-overlay.open {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--white);
+        }
+        
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        
+        .modal-close:hover {
+            color: var(--white);
+        }
+        
+        .modal-body {
+            padding: 32px;
+        }
+        
+        .modal-footer {
+            padding: 20px 32px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        /* FORM ELEMENTS */
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            color: var(--white);
+            font-family: 'Raleway', sans-serif;
+            font-size: 13px;
+            font-weight: 300;
+            outline: none;
+            transition: border-color 0.25s;
+        }
+        
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--dim);
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: rgba(58, 109, 216, 0.5);
+        }
+        
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(248,249,252,0.3)' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        
+        .form-select option {
+            background: #0b1120;
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .form-check input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        
+        .form-check span {
+            font-size: 13px;
+            font-weight: 300;
+            color: var(--muted);
+        }
+        
+        .btn-cancel {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 11px 24px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-cancel:hover {
+            border-color: var(--muted);
+            color: var(--white);
+        }
+        
+        .btn-save {
+            background: var(--blue);
+            color: white;
+            border: 1px solid var(--blue);
+            padding: 11px 28px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        
+        .btn-save:hover {
+            background: var(--blue2);
+        }
+        /* DISPO DAYS */
+        
+        .days-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .day-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--dim);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Raleway', sans-serif;
+        }
+        
+        .day-btn.on {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: white;
+        }
+        
+        .day-btn:hover:not(.on) {
+            border-color: var(--muted);
+            color: var(--muted);
+        }
+        /* VEHICLE CARD ROW */
+        
+        .vehicle-row {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            margin-bottom: 1px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 24px;
+            transition: background 0.2s;
+        }
+        
+        .vehicle-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .vehicle-thumb {
+            width: 80px;
+            height: 56px;
+            background: var(--dark2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .vehicle-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .vehicle-thumb-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dim);
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .vehicle-info {
+            flex: 1;
+        }
+        
+        .vehicle-info .cat {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        
+        .vehicle-info .name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--white);
+        }
+        
+        .vehicle-info .price {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        /* MEETUP ROW */
+        
+        .meetup-row {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            margin-bottom: 1px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 24px;
+            transition: background 0.2s;
+        }
+        
+        .meetup-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .meetup-info {
+            flex: 1;
+        }
+        
+        .meetup-info .name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+        
+        .meetup-info .addr {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 300;
+        }
+        
+        .meetup-info .radius {
+            font-size: 11px;
+            color: var(--dim);
+            margin-top: 2px;
+            letter-spacing: 1px;
+        }
+        /* EMPTY */
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            border: 1px solid var(--border);
+            color: var(--dim);
+        }
+        
+        .empty-state p {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 300;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+        
+        .empty-state span {
+            font-size: 13px;
+            font-style: italic;
+        }
+        
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+            }
+            .main {
+                margin-left: 0;
+                padding: 24px;
+            }
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <a href="index.html" class="logo">
+            <div class="logo-mark"></div>
+            <span class="logo-text">NexDrive</span>
+        </a>
+        <div class="topbar-right">
+            <span class="owner-badge">Propriétaire</span>
+            <button class="btn-logout" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <span class="sidebar-label">Menu</span>
+            <button class="nav-item active" onclick="showPanel('dashboard')">
+        <span class="nav-dot"></span> Dashboard
+      </button>
+            <button class="nav-item" onclick="showPanel('vehicles')">
+        <span class="nav-dot"></span> Véhicules
+      </button>
+            <button class="nav-item" onclick="showPanel('disponibilites')">
+        <span class="nav-dot"></span> Disponibilités
+      </button>
+            <button class="nav-item" onclick="showPanel('meetups')">
+        <span class="nav-dot"></span> Points RDV
+      </button>
+            <button class="nav-item" onclick="showPanel('reservations')">
+        <span class="nav-dot"></span> Réservations
+      </button>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+
+            <!-- DASHBOARD -->
+            <div class="panel active" id="panel-dashboard">
+                <h1 class="panel-title">Vue <em>d'ensemble</em></h1>
+                <p class="panel-sub">Overview</p>
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-num" id="kpi-vehicles">—</div>
+                        <div class="kpi-label">Véhicules total</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-num" id="kpi-available">—</div>
+                        <div class="kpi-label">Disponibles</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-num" id="kpi-meetups">—</div>
+                        <div class="kpi-label">Points RDV actifs</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-num" id="kpi-reservations">—</div>
+                        <div class="kpi-label">Réservations</div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <div class="table-header">
+                        <span class="table-title">Dernières réservations / Recent Bookings</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Référence</th>
+                                <th>Client</th>
+                                <th>Véhicule</th>
+                                <th>Dates</th>
+                                <th>Total TTC</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-reservations-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VEHICLES -->
+            <div class="panel" id="panel-vehicles">
+                <div class="section-header">
+                    <div>
+                        <h1 class="panel-title">Véhi<em>cules</em></h1>
+                        <p class="panel-sub">Vehicles</p>
+                    </div>
+                    <button class="btn-add" onclick="openVehicleModal()">+ Ajouter / Add</button>
+                </div>
+                <div id="vehicles-list"></div>
+            </div>
+
+            <!-- DISPONIBILITES -->
+            <div class="panel" id="panel-disponibilites">
+                <h1 class="panel-title">Disponibi<em>lités</em></h1>
+                <p class="panel-sub">Availability — cliquez les jours pour activer/désactiver</p>
+                <div id="dispo-list"></div>
+            </div>
+
+            <!-- MEETUPS -->
+            <div class="panel" id="panel-meetups">
+                <div class="section-header">
+                    <div>
+                        <h1 class="panel-title">Points de <em>rendez-vous</em></h1>
+                        <p class="panel-sub">Meeting Points</p>
+                    </div>
+                    <button class="btn-add" onclick="openMeetupModal()">+ Ajouter / Add</button>
+                </div>
+                <div id="meetups-list"></div>
+            </div>
+
+            <!-- RESERVATIONS -->
+            <div class="panel" id="panel-reservations">
+                <h1 class="panel-title">Réser<em>vations</em></h1>
+                <p class="panel-sub">All Bookings</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Référence</th>
+                                <th>Client</th>
+                                <th>Véhicule</th>
+                                <th>Dates</th>
+                                <th>Total TTC</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-reservations-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- VEHICLE MODAL -->
+    <div class="modal-overlay" id="vehicle-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="vehicle-modal-title">Nouveau véhicule</span>
+                <button class="modal-close" onclick="closeModal('vehicle-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="vehicle-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nom du véhicule</label>
+                        <input type="text" id="v-name" class="form-input" placeholder="BMW Série 5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Catégorie</label>
+                        <input type="text" id="v-cat" class="form-input" placeholder="Berline Executive">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="v-desc" class="form-textarea" placeholder="Description du véhicule..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Prix par jour ($ CAD)</label>
+                        <input type="number" id="v-price" class="form-input" placeholder="150">
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px;">
+                        <label class="form-check">
+              <input type="checkbox" id="v-available" checked>
+              <span>Disponible à la location</span>
+            </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('vehicle-modal')">Annuler</button>
+                <button class="btn-save" onclick="saveVehicle()">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEETUP MODAL -->
+    <div class="modal-overlay" id="meetup-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="meetup-modal-title">Nouveau point de rendez-vous</span>
+                <button class="modal-close" onclick="closeModal('meetup-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="meetup-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nom du point</label>
+                        <input type="text" id="m-name" class="form-input" placeholder="Aéroport YUL">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Rayon (km)</label>
+                        <input type="number" id="m-radius" class="form-input" value="20">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Adresse complète</label>
+                    <input type="text" id="m-address" class="form-input" placeholder="975 Boul Roméo-Vachon N, Dorval, QC">
+                </div>
+                <div class="form-group">
+                    <label class="form-check">
+            <input type="checkbox" id="m-active" checked>
+            <span>Point actif (visible par les clients)</span>
+          </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('meetup-modal')">Annuler</button>
+                <button class="btn-save" onclick="saveMeetup()">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://igftridkkchvjaxtburi.supabase.co'
+        const SUPABASE_ANON_KEY = 'sb_publishable_Q7tV7nKk4RUqMhiqjgbbxA_19xz1DU5'
+        const {
+            createClient
+        } = supabase
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+        let allVehicles = [],
+            allMeetups = [],
+            allReservations = []
+
+        // AUTH CHECK
+        async function checkAuth() {
+            const {
+                data: {
+                    session
+                }
+            } = await db.auth.getSession()
+            if (!session) {
+                window.location.href = 'login.html';
+                return
+            }
+            const {
+                data: profile
+            } = await db.from('profiles').select('role').eq('id', session.user.id).single()
+            if (profile ? .role !== 'owner') {
+                window.location.href = 'index.html';
+                return
+            }
+            loadAll()
+        }
+
+        async function loadAll() {
+            const [{
+                data: v
+            }, {
+                data: m
+            }, {
+                data: r
+            }] = await Promise.all([
+                db.from('vehicles').select('*').order('created_at', {
+                    ascending: false
+                }),
+                db.from('meetup_points').select('*').order('created_at', {
+                    ascending: false
+                }),
+                db.from('reservations').select('*, vehicles(name), meetup_points(name)').order('created_at', {
+                    ascending: false
+                })
+            ])
+            allVehicles = v || []
+            allMeetups = m || []
+            allReservations = r || []
+            renderAll()
+        }
+
+        function renderAll() {
+            renderDashboard()
+            renderVehicles()
+            renderDispo()
+            renderMeetups()
+            renderReservations()
+        }
+
+        // DASHBOARD
+        function renderDashboard() {
+            document.getElementById('kpi-vehicles').textContent = allVehicles.length
+            document.getElementById('kpi-available').textContent = allVehicles.filter(v => v.available).length
+            document.getElementById('kpi-meetups').textContent = allMeetups.filter(m => m.active).length
+            document.getElementById('kpi-reservations').textContent = allReservations.length
+            const tbody = document.getElementById('dash-reservations-body')
+            tbody.innerHTML = allReservations.slice(0, 6).map(r => reservationRow(r)).join('')
+        }
+
+        function reservationRow(r) {
+            const total = (Number(r.total_price) * 1.14975).toFixed(2)
+            const ref = 'ND-' + r.id.slice(0, 8).toUpperCase()
+            const badge = r.status === 'confirmed' ? 'badge-confirmed' : r.status === 'cancelled' ? 'badge-cancelled' : 'badge-pending'
+            return `<tr>
+        <td><span class="td-ref">${ref}</span></td>
+        <td><div class="td-name">${r.client_first_name} ${r.client_last_name}</div><div class="td-sub">${r.client_email}</div></td>
+        <td>${r.vehicles?.name || '—'}</td>
+        <td><div class="td-sub">${r.start_date}</div><div class="td-sub">${r.end_date}</div></td>
+        <td><span class="td-amount">${total}$</span></td>
+        <td><span class="badge ${badge}">${r.status}</span></td>
+      </tr>`
+        }
+
+        // VEHICLES
+        function renderVehicles() {
+            const list = document.getElementById('vehicles-list')
+            if (!allVehicles.length) {
+                list.innerHTML = `<div class="empty-state"><p>Aucun véhicule</p><span>Cliquez sur "Ajouter" pour commencer.</span></div>`
+                return
+            }
+            list.innerHTML = allVehicles.map(v => `
+        <div class="vehicle-row">
+          <div class="vehicle-thumb">
+            ${v.images && v.images.length > 0
+              ? `<img src="${v.images[0]}" alt="${v.name}">`
+              : `<div class="vehicle-thumb-placeholder">Photo</div>`}
+          </div>
+          <div class="vehicle-info">
+            <div class="cat">${v.category || ''}</div>
+            <div class="name">${v.name}</div>
+            <div class="price">${v.price_per_day}$ / jour</div>
+          </div>
+          <span class="badge ${v.available ? 'badge-available' : 'badge-unavailable'}">${v.available ? 'Disponible' : 'Indisponible'}</span>
+          <div class="btn-row-actions">
+            <button class="btn-edit" onclick="editVehicle('${v.id}')">Modifier</button>
+            <button class="btn-delete" onclick="deleteVehicle('${v.id}')">Supprimer</button>
+          </div>
+        </div>`).join('')
+    }
+
+    // DISPO
+    function renderDispo() {
+      const list = document.getElementById('dispo-list')
+      if (!allVehicles.length) {
+        list.innerHTML = `<div class="empty-state"><p>Aucun véhicule</p><span>Ajoutez des véhicules d'abord.</span></div>`
+        return
+      }
+      list.innerHTML = allVehicles.map(v => {
+        const days = v.days_available || [true,true,true,true,true,false,false]
+        return `<div style="background:var(--dark);border:1px solid var(--border);padding:24px 28px;margin-bottom:1px;">
+          <div style="margin-bottom:6px;"><span style="font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--accent);">${v.category || ''}</span></div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--white);margin-bottom:20px;">${v.name}</div>
+          <div class="days-grid">
+            ${DAYS.map((day, i) => `
+              <button class="day-btn ${days[i] ? 'on' : ''}" onclick="toggleDay('${v.id}', ${i})">${day}</button>
+            `).join('')}
+          </div>
+        </div>`
+      }).join('')
+    }
+
+    async function toggleDay(vehicleId, dayIndex) {
+      const v = allVehicles.find(v => v.id === vehicleId)
+      if (!v) return
+      const newDays = [...(v.days_available || [true,true,true,true,true,false,false])]
+      newDays[dayIndex] = !newDays[dayIndex]
+      await db.from('vehicles').update({ days_available: newDays }).eq('id', vehicleId)
+      v.days_available = newDays
+      renderDispo()
+    }
+
+    // MEETUPS
+    function renderMeetups() {
+      const list = document.getElementById('meetups-list')
+      if (!allMeetups.length) {
+        list.innerHTML = `<div class="empty-state"><p>Aucun point de rendez-vous</p><span>Cliquez sur "Ajouter" pour commencer.</span></div>`
+        return
+      }
+      list.innerHTML = allMeetups.map(m => `
+        <div class="meetup-row">
+          <div class="meetup-info">
+            <div class="name">${m.name}</div>
+            <div class="addr">${m.address}</div>
+            <div class="radius">Rayon : ${m.radius_km} km</div>
+          </div>
+          <span class="badge ${m.active ? 'badge-active' : 'badge-inactive'}">${m.active ? 'Actif' : 'Inactif'}</span>
+          <div class="btn-row-actions">
+            <button class="btn-edit" onclick="editMeetup('${m.id}')">Modifier</button>
+            <button class="btn-delete" onclick="deleteMeetup('${m.id}')">Supprimer</button>
+          </div>
+        </div>`).join('')
+    }
+
+    // ALL RESERVATIONS
+    function renderReservations() {
+      const tbody = document.getElementById('all-reservations-body')
+      if (!allReservations.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:60px;color:var(--dim);font-style:italic;">Aucune réservation pour le moment.</td></tr>`
+        return
+      }
+      tbody.innerHTML = allReservations.map(r => reservationRow(r)).join('')
+    }
+
+    // VEHICLE MODAL
+    function openVehicleModal(v = null) {
+      document.getElementById('vehicle-id').value = v ? v.id : ''
+      document.getElementById('vehicle-modal-title').textContent = v ? 'Modifier le véhicule' : 'Nouveau véhicule'
+      document.getElementById('v-name').value = v ? v.name : ''
+      document.getElementById('v-cat').value = v ? (v.category || '') : ''
+      document.getElementById('v-desc').value = v ? (v.description || '') : ''
+      document.getElementById('v-price').value = v ? v.price_per_day : ''
+      document.getElementById('v-available').checked = v ? v.available : true
+      document.getElementById('vehicle-modal').classList.add('open')
+    }
+
+    function editVehicle(id) {
+      const v = allVehicles.find(v => v.id === id)
+      if (v) openVehicleModal(v)
+    }
+
+    async function saveVehicle() {
+      const id = document.getElementById('vehicle-id').value
+      const data = {
+        name: document.getElementById('v-name').value.trim(),
+        category: document.getElementById('v-cat').value.trim(),
+        description: document.getElementById('v-desc').value.trim(),
+        price_per_day: Number(document.getElementById('v-price').value),
+        available: document.getElementById('v-available').checked
+      }
+      if (!data.name || !data.price_per_day) return
+      if (id) {
+        await db.from('vehicles').update(data).eq('id', id)
+      } else {
+        await db.from('vehicles').insert({ ...data, days_available: [true,true,true,true,true,false,false] })
+      }
+      closeModal('vehicle-modal')
+      await loadAll()
+    }
+
+    async function deleteVehicle(id) {
+      if (!confirm('Supprimer ce véhicule ? / Delete this vehicle?')) return
+      await db.from('vehicles').delete().eq('id', id)
+      await loadAll()
+    }
+
+    // MEETUP MODAL
+    function openMeetupModal(m = null) {
+      document.getElementById('meetup-id').value = m ? m.id : ''
+      document.getElementById('meetup-modal-title').textContent = m ? 'Modifier le point' : 'Nouveau point de rendez-vous'
+      document.getElementById('m-name').value = m ? m.name : ''
+      document.getElementById('m-address').value = m ? m.address : ''
+      document.getElementById('m-radius').value = m ? m.radius_km : 20
+      document.getElementById('m-active').checked = m ? m.active : true
+      document.getElementById('meetup-modal').classList.add('open')
+    }
+
+    function editMeetup(id) {
+      const m = allMeetups.find(m => m.id === id)
+      if (m) openMeetupModal(m)
+    }
+
+    async function saveMeetup() {
+      const id = document.getElementById('meetup-id').value
+      const data = {
+        name: document.getElementById('m-name').value.trim(),
+        address: document.getElementById('m-address').value.trim(),
+        radius_km: Number(document.getElementById('m-radius').value),
+        active: document.getElementById('m-active').checked
+      }
+      if (!data.name || !data.address) return
+      if (id) {
+        await db.from('meetup_points').update(data).eq('id', id)
+      } else {
+        await db.from('meetup_points').insert(data)
+      }
+      closeModal('meetup-modal')
+      await loadAll()
+    }
+
+    async function deleteMeetup(id) {
+      if (!confirm('Supprimer ce point ? / Delete this point?')) return
+      await db.from('meetup_points').delete().eq('id', id)
+      await loadAll()
+    }
+
+    // UTILS
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+      document.getElementById(`panel-${name}`).classList.add('active')
+      event.currentTarget.classList.add('active')
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open') }
+
+    async function logout() {
+      await db.auth.signOut()
+      window.location.href = 'login.html'
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open') })
+    })
+
+    checkAuth()
+    </script>
+</body>
+
+</html>

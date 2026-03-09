@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexDrive — Réservation / Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --black: #06090f;
+            --dark: #0b1120;
+            --dark2: #0f1829;
+            --blue: #1a3272;
+            --blue2: #1e3d8f;
+            --accent: #3a6fd8;
+            --white: #f8f9fc;
+            --text: rgba(248, 249, 252, 0.82);
+            --muted: rgba(248, 249, 252, 0.42);
+            --dim: rgba(248, 249, 252, 0.18);
+            --border: rgba(248, 249, 252, 0.07);
+        }
+        
+        body {
+            background: var(--black);
+            color: var(--text);
+            font-family: 'Raleway', sans-serif;
+            min-height: 100vh;
+        }
+        /* NAVBAR */
+        
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 72px;
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(6, 9, 15, 0.96);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+        
+        .logo-mark {
+            width: 2px;
+            height: 28px;
+            background: var(--accent);
+        }
+        
+        .logo-text {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 8px;
+            color: var(--white);
+            text-transform: uppercase;
+        }
+        
+        .nav-back {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: color 0.25s;
+        }
+        
+        .nav-back:hover {
+            color: var(--white);
+        }
+        /* LAYOUT */
+        
+        .page-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 120px 72px 80px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 64px;
+            align-items: start;
+        }
+        /* LEFT COLUMN */
+        
+        .form-col {}
+        
+        .form-eyebrow {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .form-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 300;
+            color: var(--white);
+            margin-bottom: 6px;
+        }
+        
+        .form-title em {
+            font-style: italic;
+            color: var(--muted);
+        }
+        
+        .vehicle-subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-style: italic;
+            color: var(--dim);
+            margin-bottom: 48px;
+        }
+        /* STEPS INDICATOR */
+        
+        .steps-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 48px;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            color: var(--dim);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .step-circle.active {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: white;
+        }
+        
+        .step-circle.done {
+            background: rgba(58, 109, 216, 0.2);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .step-name {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--dim);
+            transition: color 0.3s;
+        }
+        
+        .step-name.active {
+            color: var(--white);
+        }
+        
+        .step-name.done {
+            color: var(--muted);
+        }
+        
+        .step-connector {
+            width: 40px;
+            height: 1px;
+            background: var(--border);
+            margin: 0 12px;
+            flex-shrink: 0;
+        }
+        
+        .step-connector.done {
+            background: var(--accent);
+            opacity: 0.4;
+        }
+        /* FORM PANELS */
+        
+        .form-panel {
+            display: none;
+        }
+        
+        .form-panel.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            color: var(--white);
+            font-family: 'Raleway', sans-serif;
+            font-size: 14px;
+            font-weight: 300;
+            outline: none;
+            transition: border-color 0.25s;
+        }
+        
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--dim);
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: rgba(58, 109, 216, 0.5);
+        }
+        
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(248,249,252,0.3)' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        
+        .form-select option {
+            background: #0b1120;
+            color: white;
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-file {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-style: dashed;
+            padding: 24px 16px;
+            color: var(--muted);
+            font-family: 'Raleway', sans-serif;
+            font-size: 12px;
+            font-weight: 300;
+            outline: none;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.25s;
+        }
+        
+        .form-file:hover {
+            border-color: rgba(58, 109, 216, 0.4);
+        }
+        
+        .form-hint {
+            font-size: 11px;
+            color: var(--dim);
+            margin-top: 6px;
+            font-style: italic;
+        }
+        /* BUTTONS */
+        
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        .btn-primary {
+            background: var(--blue);
+            color: white;
+            border: 1px solid var(--blue);
+            padding: 15px 40px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: var(--blue2);
+            border-color: var(--blue2);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .btn-back {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 15px 32px;
+            font-family: 'Raleway', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-back:hover {
+            border-color: var(--muted);
+            color: var(--white);
+        }
+        /* ERROR */
+        
+        .form-error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 300;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .form-error.show {
+            display: block;
+        }
+        /* RIGHT COLUMN - SUMMARY */
+        
+        .summary-col {
+            position: sticky;
+            top: 100px;
+        }
+        
+        .summary-box {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 36px;
+        }
+        
+        .summary-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 24px;
+            display: block;
+        }
+        
+        .summary-vehicle {
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .summary-vehicle-img {
+            height: 160px;
+            background: var(--dark2);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .summary-vehicle-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .summary-vehicle-cat {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        
+        .summary-vehicle-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--white);
+        }
+        
+        .summary-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-row .key {
+            color: var(--muted);
+            font-weight: 300;
+        }
+        
+        .summary-row .val {
+            color: var(--white);
+            font-weight: 500;
+            text-align: right;
+        }
+        
+        .summary-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .summary-total .key {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        
+        .summary-total .val {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 300;
+            color: var(--white);
+            line-height: 1;
+        }
+        
+        .summary-total .val span {
+            font-size: 13px;
+            color: var(--dim);
+            font-family: 'Raleway', sans-serif;
+            font-weight: 300;
+        }
+        /* CONFIRMATION STEP */
+        
+        .confirm-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin-bottom: 28px;
+        }
+        
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        
+        .confirm-row .key {
+            color: var(--muted);
+            font-weight: 300;
+        }
+        
+        .confirm-row .val {
+            color: var(--white);
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+        }
+        
+        .confirm-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .confirm-total .key {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        
+        .confirm-total .amount {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 40px;
+            font-weight: 300;
+            color: var(--white);
+            line-height: 1;
+        }
+        
+        .confirm-note {
+            font-size: 12px;
+            color: var(--dim);
+            font-style: italic;
+            font-family: 'Cormorant Garamond', serif;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        /* FOOTER */
+        
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 24px 72px;
+            background: #030508;
+            margin-top: 60px;
+        }
+        
+        footer p {
+            font-size: 11px;
+            color: var(--dim);
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        
+        @media (max-width: 960px) {
+            .page-wrap {
+                grid-template-columns: 1fr;
+                padding: 100px 24px 60px;
+                gap: 40px;
+            }
+            .summary-col {
+                position: static;
+            }
+            nav {
+                padding: 0 24px;
+            }
+            footer {
+                padding: 24px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <div class="logo-mark"></div>
+            <span class="logo-text">NexDrive</span>
+        </a>
+        <a href="fleet.html" class="nav-back">← Flotte / Fleet</a>
+    </nav>
+
+    <div class="page-wrap">
+
+        <!-- LEFT: FORM -->
+        <div class="form-col">
+            <span class="form-eyebrow">Réservation / Booking</span>
+            <h1 class="form-title" id="vehicle-title">Chargement <em>en cours</em></h1>
+            <p class="vehicle-subtitle" id="vehicle-cat"></p>
+
+            <!-- STEPS -->
+            <div class="steps-indicator">
+                <div class="step-item">
+                    <div class="step-circle active" id="circle-1">1</div>
+                    <span class="step-name active" id="name-1">Dates</span>
+                </div>
+                <div class="step-connector" id="conn-1"></div>
+                <div class="step-item">
+                    <div class="step-circle" id="circle-2">2</div>
+                    <span class="step-name" id="name-2">Informations</span>
+                </div>
+                <div class="step-connector" id="conn-2"></div>
+                <div class="step-item">
+                    <div class="step-circle" id="circle-3">3</div>
+                    <span class="step-name" id="name-3">Confirmation</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: DATES -->
+            <div class="form-panel active" id="panel-1">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date de début / Start Date</label>
+                        <input type="date" id="start-date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date de fin / End Date</label>
+                        <input type="date" id="end-date" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Point de rendez-vous / Meeting Point</label>
+                    <select id="meetup-point" class="form-select">
+            <option value="">Sélectionner / Select</option>
+          </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Votre adresse (optionnel / Optional)</label>
+                    <input type="text" id="client-address" class="form-input" placeholder="123 Rue Exemple, Drummondville, QC">
+                </div>
+                <div id="error-1" class="form-error"></div>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="goStep2()">Continuer / Continue →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: INFO -->
+            <div class="form-panel" id="panel-2">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Prénom / First Name</label>
+                        <input type="text" id="first-name" class="form-input" placeholder="Jean">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nom / Last Name</label>
+                        <input type="text" id="last-name" class="form-input" placeholder="Tremblay">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Téléphone / Phone</label>
+                    <input type="tel" id="phone" class="form-input" placeholder="+1 (819) 000-0000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="jean@exemple.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Photo du permis de conduire / Driver's License</label>
+                    <input type="file" id="license-file" class="form-file" accept="image/*,application/pdf">
+                    <p class="form-hint">JPG, PNG ou PDF — obligatoire / required</p>
+                </div>
+                <div id="error-2" class="form-error"></div>
+                <div class="btn-row">
+                    <button class="btn-back" onclick="goStep(1)">← Retour</button>
+                    <button class="btn-primary" onclick="goStep3()">Continuer →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: CONFIRM -->
+            <div class="form-panel" id="panel-3">
+                <div class="confirm-rows" id="confirm-rows"></div>
+                <div class="confirm-total">
+                    <span class="key">Total TTC</span>
+                    <span class="amount" id="confirm-total">—</span>
+                </div>
+                <p style="font-size:11px; color:var(--dim); margin-bottom: 32px; margin-top: 6px; text-align:right;">CAD, taxes incluses / taxes included</p>
+                <p class="confirm-note">Un contrat complet sera généré automatiquement et envoyé à votre adresse email après confirmation.<br><em>A complete contract will be automatically generated and sent to your email after confirmation.</em></p>
+                <div id="error-3" class="form-error"></div>
+                <div class="btn-row">
+                    <button class="btn-back" onclick="goStep(2)">← Retour</button>
+                    <button class="btn-primary" id="submit-btn" onclick="submitBooking()">Confirmer / Confirm</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: SUMMARY -->
+        <div class="summary-col">
+            <div class="summary-box">
+                <span class="summary-label">Résumé / Summary</span>
+                <div class="summary-vehicle">
+                    <div class="summary-vehicle-img" id="summary-img">
+                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;letter-spacing:3px;text-transform:uppercase;">Chargement...</div>
+                    </div>
+                    <div class="summary-vehicle-cat" id="summary-cat"></div>
+                    <div class="summary-vehicle-name" id="summary-name"></div>
+                </div>
+                <div class="summary-rows" id="summary-rows">
+                    <div class="summary-row">
+                        <span class="key">Dates</span>
+                        <span class="val" id="sum-dates">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="key">Durée</span>
+                        <span class="val" id="sum-days">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="key">Prix/jour</span>
+                        <span class="val" id="sum-price">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="key">Sous-total</span>
+                        <span class="val" id="sum-subtotal">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="key">TPS (5%)</span>
+                        <span class="val" id="sum-tps">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="key">TVQ (9.975%)</span>
+                        <span class="val" id="sum-tvq">—</span>
+                    </div>
+                </div>
+                <div class="summary-total">
+                    <span class="key">Total TTC</span>
+                    <div class="val"><span id="sum-total">—</span> <span>$ CAD</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>© 2026 NexDrive — Québec, Canada</p>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://igftridkkchvjaxtburi.supabase.co'
+        const SUPABASE_ANON_KEY = 'sb_publishable_Q7tV7nKk4RUqMhiqjgbbxA_19xz1DU5'
+        const {
+            createClient
+        } = supabase
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        const params = new URLSearchParams(window.location.search)
+        const vehicleId = params.get('id')
+        let vehicle = null
+        let currentStep = 1
+
+        // Set min date to today
+        const today = new Date().toISOString().split('T')[0]
+        document.getElementById('start-date').min = today
+        document.getElementById('end-date').min = today
+
+        // Load vehicle + meetup points
+        async function init() {
+            if (!vehicleId) {
+                window.location.href = 'fleet.html';
+                return
+            }
+
+            const [{
+                data: v
+            }, {
+                data: meetups
+            }] = await Promise.all([
+                db.from('vehicles').select('*').eq('id', vehicleId).single(),
+                db.from('meetup_points').select('*').eq('active', true)
+            ])
+
+            if (!v) {
+                window.location.href = 'fleet.html';
+                return
+            }
+            vehicle = v
+
+            document.getElementById('vehicle-title').innerHTML = `${v.name}`
+            document.getElementById('vehicle-cat').textContent = v.category || ''
+            document.getElementById('summary-cat').textContent = v.category || ''
+            document.getElementById('summary-name').textContent = v.name
+            document.getElementById('sum-price').textContent = `${v.price_per_day}$ / jour`
+
+            if (v.images && v.images.length > 0) {
+                document.getElementById('summary-img').innerHTML = `<img src="${v.images[0]}" alt="${v.name}">`
+            } else {
+                document.getElementById('summary-img').innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:10px;letter-spacing:3px;text-transform:uppercase;">Photo à venir</div>`
+            }
+
+            const sel = document.getElementById('meetup-point');
+            (meetups || []).forEach(m => {
+                const opt = document.createElement('option')
+                opt.value = m.id
+                opt.textContent = `${m.name} — ${m.address} (${m.radius_km} km)`
+                sel.appendChild(opt)
+            })
+        }
+
+        function calcDays() {
+            const s = document.getElementById('start-date').value
+            const e = document.getElementById('end-date').value
+            if (!s || !e) return 0
+            return Math.max(1, Math.ceil((new Date(e) - new Date(s)) / 86400000))
+        }
+
+        function updateSummary() {
+            const days = calcDays()
+            const s = document.getElementById('start-date').value
+            const e = document.getElementById('end-date').value
+            if (days > 0 && vehicle) {
+                const subtotal = days * vehicle.price_per_day
+                const tps = subtotal * 0.05
+                const tvq = subtotal * 0.09975
+                const total = subtotal + tps + tvq
+                document.getElementById('sum-dates').textContent = s && e ? `${s} → ${e}` : '—'
+                document.getElementById('sum-days').textContent = `${days} jour${days > 1 ? 's' : ''}`
+                document.getElementById('sum-subtotal').textContent = `${subtotal.toFixed(2)}$`
+                document.getElementById('sum-tps').textContent = `${tps.toFixed(2)}$`
+                document.getElementById('sum-tvq').textContent = `${tvq.toFixed(2)}$`
+                document.getElementById('sum-total').textContent = total.toFixed(2)
+            }
+        }
+
+        document.getElementById('start-date').addEventListener('change', updateSummary)
+        document.getElementById('end-date').addEventListener('change', updateSummary)
+
+        function goStep(n) {
+            document.getElementById(`panel-${currentStep}`).classList.remove('active')
+                // Update indicators
+            for (let i = 1; i <= 3; i++) {
+                const circle = document.getElementById(`circle-${i}`)
+                const name = document.getElementById(`name-${i}`)
+                circle.classList.remove('active', 'done')
+                name.classList.remove('active', 'done')
+                if (i < n) {
+                    circle.classList.add('done');
+                    name.classList.add('done');
+                } else if (i === n) {
+                    circle.classList.add('active');
+                    name.classList.add('active');
+                }
+                if (i < 3) {
+                    const conn = document.getElementById(`conn-${i}`)
+                    conn.classList.toggle('done', i < n)
+                }
+            }
+            currentStep = n
+            document.getElementById(`panel-${n}`).classList.add('active')
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            })
+        }
+
+        function goStep2() {
+            const s = document.getElementById('start-date').value
+            const e = document.getElementById('end-date').value
+            const err = document.getElementById('error-1')
+            if (!s || !e) {
+                err.textContent = 'Veuillez sélectionner les dates. / Please select dates.';
+                err.classList.add('show');
+                return
+            }
+            if (new Date(e) <= new Date(s)) {
+                err.textContent = 'La date de fin doit être après la date de début. / End date must be after start date.';
+                err.classList.add('show');
+                return
+            }
+            err.classList.remove('show')
+            goStep(2)
+        }
+
+        function goStep3() {
+            const fn = document.getElementById('first-name').value.trim()
+            const ln = document.getElementById('last-name').value.trim()
+            const ph = document.getElementById('phone').value.trim()
+            const em = document.getElementById('email').value.trim()
+            const lf = document.getElementById('license-file').files[0]
+            const err = document.getElementById('error-2')
+            if (!fn || !ln || !ph || !em) {
+                err.textContent = 'Veuillez remplir tous les champs. / Please fill all fields.';
+                err.classList.add('show');
+                return
+            }
+            if (!lf) {
+                err.textContent = 'Veuillez téléverser votre permis de conduire. / Please upload your driver\'s license.';
+                err.classList.add('show');
+                return
+            }
+            err.classList.remove('show')
+
+            // Build confirm rows
+            const days = calcDays()
+            const subtotal = days * vehicle.price_per_day
+            const tps = subtotal * 0.05
+            const tvq = subtotal * 0.09975
+            const total = subtotal + tps + tvq
+            const meetupSel = document.getElementById('meetup-point')
+            const meetupText = meetupSel.value ? meetupSel.options[meetupSel.selectedIndex].text : 'Non sélectionné'
+
+            const rows = [
+                ['Véhicule', vehicle.name],
+                ['Client', `${fn} ${ln}`],
+                ['Email', em],
+                ['Téléphone', ph],
+                ['Dates', `${document.getElementById('start-date').value} → ${document.getElementById('end-date').value}`],
+                ['Durée', `${days} jour${days > 1 ? 's' : ''}`],
+                ['Point RDV', meetupText],
+                ['Sous-total', `${subtotal.toFixed(2)}$`],
+                ['TPS (5%)', `${tps.toFixed(2)}$`],
+                ['TVQ (9.975%)', `${tvq.toFixed(2)}$`],
+            ]
+
+            document.getElementById('confirm-rows').innerHTML = rows.map(([k, v]) =>
+                `<div class="confirm-row"><span class="key">${k}</span><span class="val">${v}</span></div>`
+            ).join('')
+
+            document.getElementById('confirm-total').textContent = `${total.toFixed(2)}$`
+            goStep(3)
+        }
+
+        async function submitBooking() {
+            const btn = document.getElementById('submit-btn')
+            const err = document.getElementById('error-3')
+            btn.disabled = true
+            btn.textContent = 'Traitement...'
+            err.classList.remove('show')
+
+            // Upload license
+            let licenseUrl = null
+            const file = document.getElementById('license-file').files[0]
+            if (file) {
+                const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`
+                const {
+                    data: uploadData,
+                    error: uploadError
+                } = await db.storage.from('licenses').upload(fileName, file)
+                if (uploadData) {
+                    const {
+                        data: urlData
+                    } = db.storage.from('licenses').getPublicUrl(fileName)
+                    licenseUrl = urlData.publicUrl
+                }
+            }
+
+            const days = calcDays()
+            const subtotal = days * vehicle.price_per_day
+            const meetupId = document.getElementById('meetup-point').value || null
+
+            const {
+                data: reservation,
+                error
+            } = await db.from('reservations').insert({
+                vehicle_id: vehicleId,
+                meetup_point_id: meetupId,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+                total_price: subtotal,
+                client_first_name: document.getElementById('first-name').value.trim(),
+                client_last_name: document.getElementById('last-name').value.trim(),
+                client_phone: document.getElementById('phone').value.trim(),
+                client_email: document.getElementById('email').value.trim(),
+                license_photo_url: licenseUrl,
+                status: 'pending'
+            }).select().single()
+
+            if (error) {
+                err.textContent = 'Erreur lors de la réservation. Veuillez réessayer. / Error during booking. Please try again.'
+                err.classList.add('show')
+                btn.disabled = false
+                btn.textContent = 'Confirmer / Confirm'
+                return
+            }
+
+            // Send contract email
+            try {
+                await fetch('/api/send-contract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reservationId: reservation.id
+                    })
+                })
+            } catch (e) {}
+
+            window.location.href = `confirmation.html?id=${reservation.id}`
+        }
+
+        init()
+    </script>
+</body>
+
+</html>

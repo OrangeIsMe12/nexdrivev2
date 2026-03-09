@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexDrive — Connexion</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --navy: #050d1f;
+            --royal: #1440c8;
+            --sky: #2d6ef5;
+            --bright: #5b8fff;
+            --white: #ffffff;
+            --silver: rgba(240, 244, 255, 0.75);
+            --muted: rgba(240, 244, 255, 0.45);
+            --dim: rgba(240, 244, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --white-border: rgba(255, 255, 255, 0.16);
+        }
+        
+        body {
+            background: var(--navy);
+            color: var(--silver);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        .bg-glow {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+        }
+        
+        .bg-glow-1 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(20, 64, 200, 0.16) 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+        }
+        
+        .bg-glow-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(45, 110, 245, 0.1) 0%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+        }
+        
+        .noise {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+        
+        .grid-deco {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .grid-deco::before,
+        .grid-deco::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent);
+        }
+        
+        .grid-deco::before {
+            left: 60px;
+        }
+        
+        .grid-deco::after {
+            right: 60px;
+        }
+        
+        nav {
+            position: relative;
+            z-index: 10;
+            padding: 0 64px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(5, 13, 31, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--white-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .logo:hover .logo-icon {
+            background: rgba(20, 64, 200, 0.25);
+            border-color: var(--sky);
+        }
+        
+        .logo-text {
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 6px;
+            color: var(--white);
+            text-transform: uppercase;
+        }
+        
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: color 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-link:hover {
+            color: var(--white);
+        }
+        
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .auth-wrap {
+            width: 100%;
+            max-width: 460px;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .auth-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--white);
+            margin-bottom: 24px;
+        }
+        
+        .auth-eyebrow::before,
+        .auth-eyebrow::after {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 1px;
+            background: var(--white-border);
+        }
+        
+        .auth-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 52px;
+            font-weight: 900;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+        
+        .auth-title em {
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(135deg, #ffffff 0%, var(--bright) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .auth-subtitle {
+            font-size: 14px;
+            font-weight: 300;
+            color: var(--muted);
+        }
+        
+        .auth-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 48px 44px;
+            backdrop-filter: blur(16px);
+            position: relative;
+        }
+        
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 40px;
+            right: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--white), transparent);
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .form-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 300;
+            outline: none;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .form-input::placeholder {
+            color: var(--dim);
+        }
+        
+        .form-input:focus {
+            border-color: var(--white-border);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .msg {
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.5;
+            display: none;
+        }
+        
+        .msg.show {
+            display: block;
+        }
+        
+        .msg-error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, var(--royal) 0%, var(--sky) 100%);
+            color: white;
+            border: none;
+            padding: 17px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.4s;
+            margin-top: 4px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(20, 64, 200, 0.4);
+        }
+        
+        .btn-submit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--sky) 0%, var(--royal) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+            box-shadow: 0 12px 48px rgba(45, 110, 245, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .btn-submit:hover:not(:disabled)::before {
+            opacity: 1;
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        
+        .btn-submit span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 13px;
+            font-weight: 300;
+            color: var(--muted);
+        }
+        
+        .auth-switch a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        
+        .auth-switch a:hover {
+            opacity: 0.75;
+        }
+        /* Register link — prominent */
+        
+        .register-cta {
+            margin-top: 20px;
+            border: 1px solid var(--white-border);
+            padding: 16px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.3s;
+        }
+        
+        .register-cta:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+        
+        .register-cta p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+        
+        .register-cta a {
+            color: var(--white);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .register-cta a:hover {
+            opacity: 0.8;
+        }
+        
+        .register-cta a svg {
+            transition: transform 0.2s;
+        }
+        
+        .register-cta a:hover svg {
+            transform: translateX(3px);
+        }
+        
+        footer {
+            position: relative;
+            z-index: 10;
+            border-top: 1px solid var(--border);
+            padding: 24px 64px;
+            background: rgba(2, 9, 18, 0.9);
+        }
+        
+        footer p {
+            font-size: 11px;
+            color: var(--dim);
+            letter-spacing: 2px;
+            text-align: center;
+            font-weight: 300;
+        }
+        
+        @media (max-width: 600px) {
+            nav {
+                padding: 0 24px;
+            }
+            .auth-card {
+                padding: 36px 24px;
+            }
+            footer {
+                padding: 24px;
+            }
+            .grid-deco {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="noise"></div>
+    <div class="grid-deco"></div>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <div class="logo-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M2 13L4.5 6L9 4L13.5 6L16 13" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="13" r="1.5" stroke="#fff" stroke-width="1.2"/>
+          <path d="M5.5 13H12.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+            </div>
+            <span class="logo-text">NexDrive</span>
+        </a>
+
+    </nav>
+
+    <main>
+        <div class="auth-wrap">
+            <div class="auth-header">
+                <div class="auth-eyebrow">Accès sécurisé</div>
+                <h1 class="auth-title">Bon<em>jour</em></h1>
+                <p class="auth-subtitle">Connectez-vous à votre espace NexDrive</p>
+            </div>
+
+            <div class="auth-card">
+                <form class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="login-email" class="form-input" placeholder="votre@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mot de passe</label>
+                        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <div id="login-error" class="msg msg-error"></div>
+                    <button type="submit" class="btn-submit" id="login-btn"><span>Se connecter</span></button>
+                </form>
+            </div>
+
+            <div class="register-cta">
+                <p>Vous n'avez pas encore de compte ?</p>
+                <a href="register.html">
+          Créer un compte
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 NexDrive — Québec, Canada</p>
+    </footer>
+
+    <script>
+        const {
+            createClient
+        } = supabase
+        const db = createClient('https://igftridkkchvjaxtburi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnZnRyaWRra2NodmpheHRidXJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwODcxMzgsImV4cCI6MjA4ODY2MzEzOH0.SuUO_seWElDPnm3lnGEEn8OwflJhbocyJjVF8nvrf4Y')
+
+        async function handleLogin(e) {
+            e.preventDefault()
+            const btn = document.getElementById('login-btn')
+            const errEl = document.getElementById('login-error')
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Connexion...'
+            errEl.classList.remove('show')
+            const {
+                data,
+                error
+            } = await db.auth.signInWithPassword({
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            })
+            if (error) {
+                errEl.textContent = 'Email ou mot de passe incorrect.'
+                errEl.classList.add('show')
+                btn.disabled = false;
+                btn.querySelector('span').textContent = 'Se connecter'
+                return
+            }
+            const {
+                data: profile
+            } = await db.from('profiles').select('role').eq('id', data.user.id).single()
+            window.location.href = (profile && profile.role === 'owner') ? 'owner.html' : 'fleet.html'
+        }
+
+        db.auth.getSession().then(({
+            data: {
+                session
+            }
+        }) => {
+            if (session) {
+                db.from('profiles').select('role').eq('id', session.user.id).single().then(({
+                    data: profile
+                }) => {
+                    window.location.href = (profile && profile.role === 'owner') ? 'owner.html' : 'fleet.html'
+                })
+            }
+        })
+    </script>
+</body>
+
+</html>

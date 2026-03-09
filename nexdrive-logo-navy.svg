@@ -1,0 +1,31 @@
+<svg width="340" height="70" viewBox="0 0 340 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="340" height="70" fill="#050d1f"/>
+  <defs>
+    <linearGradient id="nvBlue" x1="0" y1="35" x2="75" y2="35" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#003fbb" stop-opacity="0.5"/>
+      <stop offset="40%" stop-color="#0070ff"/>
+      <stop offset="100%" stop-color="#40a0ff" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="nvDrive" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4da6ff"/>
+      <stop offset="100%" stop-color="#0070ff"/>
+    </linearGradient>
+    <filter id="nvGlow" x="-10%" y="-500%" width="120%" height="1100%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feColorMatrix in="b" type="matrix" values="0 0 0 0 0  0 0 0 0 0.35  0 0 0 0 1  0 0 0 1.5 0" result="g"/>
+      <feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <path d="M8 52 L8 18 L26 52 L26 18" stroke="rgba(255,255,255,0.92)" stroke-width="5" stroke-linecap="square" fill="none"/>
+  <path d="M31 52 L31 18 M31 18 L40 18 L50 35 L40 52 L31 52" stroke="rgba(255,255,255,0.92)" stroke-width="5" stroke-linecap="square" fill="none"/>
+  <g filter="url(#nvGlow)">
+    <line x1="3" y1="35" x2="56" y2="35" stroke="url(#nvBlue)" stroke-width="1.2"/>
+    <polyline points="48,28 57,35 48,42" stroke="url(#nvBlue)" stroke-width="1.2" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
+  </g>
+  <rect x="28.5" y="32.5" width="5" height="5" transform="rotate(45 31 35)" fill="#050d1f" stroke="url(#nvBlue)" stroke-width="0.6"/>
+  <line x1="72" y1="12" x2="72" y2="58" stroke="rgba(0,100,255,0.18)" stroke-width="0.5"/>
+  <text x="84" y="36" font-family="Raleway,sans-serif" font-weight="200" font-size="22" fill="white" letter-spacing="8">NEX</text>
+  <text x="160" y="36" font-family="Raleway,sans-serif" font-weight="300" font-size="22" fill="url(#nvDrive)" letter-spacing="6">DRIVE</text>
+  <line x1="84" y1="44" x2="330" y2="44" stroke="rgba(0,100,255,0.13)" stroke-width="0.4"/>
+  <text x="84" y="56" font-family="Cormorant Garamond,serif" font-weight="300" font-style="italic" font-size="9.5" fill="rgba(60,140,255,0.42)" letter-spacing="2.5">Location de véhicules premium — Québec</text>
+</svg>

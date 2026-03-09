@@ -1,0 +1,48 @@
+<svg width="340" height="90" viewBox="0 0 340 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hBlueG" x1="0" y1="45" x2="90" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#003fbb" stop-opacity="0.5"/>
+      <stop offset="35%" stop-color="#0070ff"/>
+      <stop offset="70%" stop-color="#40a0ff"/>
+      <stop offset="100%" stop-color="#0070ff" stop-opacity="0.7"/>
+    </linearGradient>
+    <linearGradient id="hFrame" x1="0" y1="0" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0070ff" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#0070ff" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0070ff" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="hDriveText" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4da6ff"/>
+      <stop offset="100%" stop-color="#0070ff"/>
+    </linearGradient>
+    <filter id="hBlueGlow" x="-10%" y="-600%" width="120%" height="1300%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0.35  0 0 0 0 1  0 0 0 1.6 0" result="g"/>
+      <feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="hWGlow">
+      <feGaussianBlur stdDeviation="0.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="0.5" y="0.5" width="89" height="89" fill="#02050d"/>
+  <rect x="0.5" y="0.5" width="89" height="89" stroke="url(#hFrame)" stroke-width="0.7" fill="none"/>
+  <rect x="4" y="4" width="82" height="82" stroke="rgba(0,100,255,0.08)" stroke-width="0.4" fill="none"/>
+  <path d="M4 13 L4 4 L13 4" stroke="rgba(0,120,255,0.4)" stroke-width="0.7" fill="none"/>
+  <path d="M77 4 L86 4 L86 13" stroke="rgba(0,120,255,0.4)" stroke-width="0.7" fill="none"/>
+  <path d="M4 77 L4 86 L13 86" stroke="rgba(0,120,255,0.4)" stroke-width="0.7" fill="none"/>
+  <path d="M86 77 L86 86 L77 86" stroke="rgba(0,120,255,0.4)" stroke-width="0.7" fill="none"/>
+  <rect x="0" y="38" width="90" height="14" fill="rgba(0,50,180,0.06)" rx="7"/>
+  <path d="M12 68 L12 22 L38 68 L38 22" stroke="rgba(255,255,255,0.95)" stroke-width="5.5" stroke-linecap="square" fill="none" filter="url(#hWGlow)"/>
+  <path d="M45 68 L45 22 M45 22 L57 22 L69 45 L57 68 L45 68" stroke="rgba(255,255,255,0.95)" stroke-width="5.5" stroke-linecap="square" fill="none" filter="url(#hWGlow)"/>
+  <g filter="url(#hBlueGlow)">
+    <line x1="4" y1="45" x2="76" y2="45" stroke="url(#hBlueG)" stroke-width="1.2"/>
+    <polyline points="67,37 77,45 67,53" stroke="url(#hBlueG)" stroke-width="1.2" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
+  </g>
+  <rect x="42.5" y="42.5" width="5" height="5" transform="rotate(45 45 45)" fill="#02050d" stroke="url(#hBlueG)" stroke-width="0.6"/>
+  <line x1="108" y1="20" x2="108" y2="70" stroke="rgba(0,100,255,0.18)" stroke-width="0.6"/>
+  <text x="122" y="46" font-family="Raleway, sans-serif" font-weight="200" font-size="28" fill="white" letter-spacing="10">NEX</text>
+  <text x="209" y="46" font-family="Raleway, sans-serif" font-weight="300" font-size="28" fill="url(#hDriveText)" letter-spacing="8">DRIVE</text>
+  <line x1="122" y1="56" x2="330" y2="56" stroke="rgba(0,100,255,0.15)" stroke-width="0.5"/>
+  <text x="122" y="70" font-family="Cormorant Garamond, serif" font-weight="300" font-style="italic" font-size="11" fill="rgba(60,140,255,0.5)" letter-spacing="3">Location de véhicules premium — Québec</text>
+</svg>

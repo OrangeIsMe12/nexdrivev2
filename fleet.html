@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexDrive — Flotte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --navy: #050d1f;
+            --navy2: #071430;
+            --royal: #1440c8;
+            --sky: #2d6ef5;
+            --bright: #5b8fff;
+            --white: #ffffff;
+            --silver: rgba(240, 244, 255, 0.75);
+            --muted: rgba(240, 244, 255, 0.45);
+            --dim: rgba(240, 244, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass2: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --white-border: rgba(255, 255, 255, 0.16);
+        }
+        
+        body {
+            background: var(--navy);
+            color: var(--silver);
+            font-family: 'DM Sans', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 64px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(5, 13, 31, 0.97);
+            backdrop-filter: blur(32px);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--white-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .logo:hover .logo-icon {
+            background: rgba(20, 64, 200, 0.25);
+            border-color: var(--sky);
+        }
+        
+        .logo-text {
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 6px;
+            color: var(--white);
+            text-transform: uppercase;
+        }
+        
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .nav-user {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+        
+        .btn-nav {
+            border: 1px solid var(--white-border);
+            color: var(--white);
+            background: transparent;
+            padding: 8px 20px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-nav::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--royal), var(--sky));
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+        
+        .btn-nav:hover {
+            border-color: transparent;
+        }
+        
+        .btn-nav:hover::before {
+            transform: translateX(0);
+        }
+        
+        .btn-nav span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .page-header {
+            padding: 120px 64px 64px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, var(--navy2) 0%, var(--navy) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 64px;
+            right: 64px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--white-border), transparent);
+        }
+        
+        .page-header-glow {
+            position: absolute;
+            width: 600px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(20, 64, 200, 0.12) 0%, transparent 70%);
+            top: -100px;
+            right: -100px;
+            pointer-events: none;
+        }
+        
+        .eyebrow {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--white);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .eyebrow::before {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 1px;
+            background: var(--white);
+        }
+        
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(40px, 5vw, 64px);
+            font-weight: 900;
+            color: var(--white);
+            margin-bottom: 12px;
+            line-height: 1.05;
+        }
+        
+        .page-header h1 em {
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(135deg, #fff 0%, var(--bright) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-header p {
+            font-size: 15px;
+            font-weight: 300;
+            color: var(--muted);
+        }
+        
+        .content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 72px 64px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--dim);
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        
+        .loading-dot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: var(--white);
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: blink 1.2s ease-in-out infinite;
+        }
+        
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 100px 40px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+        }
+        
+        .empty h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        
+        .empty p {
+            color: var(--dim);
+            font-size: 13px;
+        }
+        
+        .vehicles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 24px;
+        }
+        
+        .vehicle-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vehicle-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, var(--white), var(--sky));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+            z-index: 1;
+        }
+        
+        .vehicle-card:hover {
+            border-color: var(--white-border);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(5, 13, 31, 0.6);
+        }
+        
+        .vehicle-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .vehicle-img {
+            height: 240px;
+            background: var(--navy2);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .vehicle-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .vehicle-card:hover .vehicle-img img {
+            transform: scale(1.04);
+        }
+        
+        .vehicle-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--dim);
+        }
+        
+        .vehicle-img-placeholder svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.25;
+        }
+        
+        .vehicle-img-placeholder span {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        
+        .vehicle-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 5px 12px;
+        }
+        
+        .status-available {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            color: #4ade80;
+        }
+        
+        .status-unavailable {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+        
+        .vehicle-body {
+            padding: 28px 32px 32px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vehicle-category {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--white);
+            margin-bottom: 10px;
+            opacity: 0.55;
+        }
+        
+        .vehicle-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+        
+        .vehicle-desc {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.75;
+            margin-bottom: 28px;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .vehicle-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .vehicle-price .amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 34px;
+            font-weight: 900;
+            color: var(--white);
+            line-height: 1;
+        }
+        
+        .vehicle-price .unit {
+            font-size: 11px;
+            color: var(--dim);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+        
+        .btn-book {
+            background: linear-gradient(135deg, var(--royal), var(--sky));
+            color: white;
+            text-decoration: none;
+            padding: 11px 24px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            font-family: 'DM Sans', sans-serif;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(20, 64, 200, 0.35);
+        }
+        
+        .btn-book::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--sky), var(--royal));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .btn-book:hover {
+            box-shadow: 0 8px 32px rgba(45, 110, 245, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .btn-book:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-book span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-unavailable {
+            color: var(--dim);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        
+        footer {
+            background: #020912;
+            border-top: 1px solid var(--border);
+            padding: 40px 64px;
+        }
+        
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .footer-inner p {
+            font-size: 11px;
+            color: var(--dim);
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        
+        @media (max-width: 900px) {
+            nav {
+                padding: 0 24px;
+            }
+            .nav-user {
+                display: none;
+            }
+            .page-header {
+                padding: 100px 24px 48px;
+            }
+            .content {
+                padding: 48px 24px;
+            }
+            .vehicles-grid {
+                grid-template-columns: 1fr;
+            }
+            footer {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <div class="logo-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M2 13L4.5 6L9 4L13.5 6L16 13" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="13" r="1.5" stroke="#fff" stroke-width="1.2"/>
+          <path d="M5.5 13H12.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+            </div>
+            <span class="logo-text">NexDrive</span>
+        </a>
+        <div class="nav-right">
+            <span class="nav-user" id="nav-email"></span>
+            <button class="btn-nav" onclick="handleLogout()"><span>Déconnexion</span></button>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="page-header-glow"></div>
+        <div class="eyebrow">Notre flotte</div>
+        <h1>Véhicules <em>disponibles</em></h1>
+        <p>Sélectionnez le véhicule qui vous convient et réservez en ligne.</p>
+    </div>
+
+    <div class="content">
+        <div id="vehicles-container">
+            <div class="loading">
+                <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-inner">
+            <p>© 2026 NexDrive — Québec, Canada</p>
+            <p>Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <script>
+        const {
+            createClient
+        } = supabase
+        const db = createClient('https://igftridkkchvjaxtburi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlnZnRyaWRra2NodmpheHRidXJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwODcxMzgsImV4cCI6MjA4ODY2MzEzOH0.SuUO_seWElDPnm3lnGEEn8OwflJhbocyJjVF8nvrf4Y')
+
+        db.auth.getSession().then(({
+            data: {
+                session
+            }
+        }) => {
+            if (!session) {
+                window.location.href = 'login.html';
+                return
+            }
+            const email = session.user.email
+            document.getElementById('nav-email').textContent = email.length > 22 ? email.slice(0, 20) + '…' : email
+        })
+
+        async function handleLogout() {
+            await db.auth.signOut()
+            window.location.href = 'login.html'
+        }
+
+        async function loadVehicles() {
+            const container = document.getElementById('vehicles-container')
+            const {
+                data: vehicles,
+                error
+            } = await db.from('vehicles').select('*').order('created_at', {
+                ascending: false
+            })
+
+            if (error || !vehicles || vehicles.length === 0) {
+                container.innerHTML = `<div class="empty"><h3>Aucun véhicule disponible</h3><p>Revenez bientôt, notre flotte est en cours de mise à jour.</p></div>`
+                return
+            }
+
+            const grid = document.createElement('div')
+            grid.className = 'vehicles-grid'
+
+            vehicles.forEach(v => {
+                const card = document.createElement('div')
+                card.className = 'vehicle-card'
+                const imgHTML = (v.images && v.images.length > 0) ?
+                    `<img src="${v.images[0]}" alt="${v.name}" loading="lazy">` :
+                    `<div class="vehicle-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M5 17H3a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h12l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg><span>Photo à venir</span></div>`
+                const bookBtn = v.available ?
+                    `<a href="booking.html?id=${v.id}" class="btn-book"><span>Réserver</span></a>` :
+                    `<span class="btn-unavailable">Non disponible</span>`
+                card.innerHTML = `
+          <div class="vehicle-img">${imgHTML}
+            <span class="vehicle-status ${v.available ? 'status-available' : 'status-unavailable'}">${v.available ? 'Disponible' : 'Indisponible'}</span>
+          </div>
+          <div class="vehicle-body">
+            <div class="vehicle-category">${v.category || 'Véhicule'}</div>
+            <h2 class="vehicle-name">${v.name}</h2>
+            <p class="vehicle-desc">${v.description || ''}</p>
+            <div class="vehicle-footer">
+              <div class="vehicle-price"><div class="amount">${Number(v.price_per_day).toFixed(0)}$</div><div class="unit">CAD / jour</div></div>
+              ${bookBtn}
+            </div>
+          </div>`
+                grid.appendChild(card)
+            })
+            container.innerHTML = ''
+            container.appendChild(grid)
+        }
+
+        loadVehicles()
+    </script>
+</body>
+
+</html>
