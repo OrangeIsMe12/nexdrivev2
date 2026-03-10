@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexDrive — Location de Véhicules Premium | Québec</title>
+    <link rel="icon" type="image/svg+xml" href="nexdrive-icone.svg">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const {
+            createClient
+        } = supabase
+        const _db = createClient('https://igftridkkchvjaxtburi.supabase.co', 'sb_publishable_Q7tV7nKk4RUqMhiqjgbbxA_19xz1DU5')
+        _db.auth.getSession().then(({
+            data: {
+                session
+            }
+        }) => {
+            if (!session) {
+                window.location.href = 'login.html'
+            } else {
+                _db.from('profiles').select('role').eq('id', session.user.id).single().then(({
+                    data: profile
+                }) => {
+                    if (profile ? .role === 'owner') window.location.href = 'owner.html'
+                    else window.location.href = 'fleet.html'
+                })
+            }
+        })
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --navy: #050d1f;
+            --navy2: #071430;
+            --royal: #1440c8;
+            --sky: #2d6ef5;
+            --bright: #5b8fff;
+            --white: #ffffff;
+            --silver: rgba(240, 244, 255, 0.75);
+            --muted: rgba(240, 244, 255, 0.48);
+            --dim: rgba(240, 244, 255, 0.22);
+            --glass: rgba(255, 255, 255, 0.04);
+            --glass2: rgba(255, 255, 255, 0.09);
+            --border: rgba(255, 255, 255, 0.09);
+            --border2: rgba(45, 110, 245, 0.35);
+            --white-border: rgba(255, 255, 255, 0.18);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background: var(--navy);
+            color: var(--silver);
+            font-family: 'DM Sans', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        #canvas-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .noise {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+        /* ── NAVBAR ── */
+        
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 64px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.5s;
+        }
+        
+        nav.scrolled {
+            background: rgba(5, 13, 31, 0.97);
+            backdrop-filter: blur(32px);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--white-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .logo:hover .logo-icon {
+            background: rgba(20, 64, 200, 0.25);
+            border-color: var(--sky);
+        }
+        
+        .logo-text {
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 6px;
+            color: var(--white);
+            text-transform: uppercase;
+        }
+        
+        .nav-center {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+        
+        .nav-center a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: color 0.25s;
+            position: relative;
+        }
+        
+        .nav-center a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--white);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        
+        .nav-center a:hover {
+            color: var(--white);
+        }
+        
+        .nav-center a:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .btn-outline-sm {
+            border: 1px solid var(--white-border);
+            color: var(--white);
+            text-decoration: none;
+            padding: 9px 24px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-outline-sm::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--royal), var(--sky));
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+        
+        .btn-outline-sm:hover {
+            border-color: transparent;
+        }
+        
+        .btn-outline-sm:hover::before {
+            transform: translateX(0);
+        }
+        
+        .btn-outline-sm span {
+            position: relative;
+            z-index: 1;
+        }
+        /* ── HERO ── */
+        
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 120px 64px 80px;
+        }
+        
+        .hero-glow {
+            position: absolute;
+            width: 900px;
+            height: 900px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(20, 64, 200, 0.18) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            pointer-events: none;
+            transition: transform 0.15s ease;
+        }
+        
+        .hero-glow2 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+            bottom: 5%;
+            right: 10%;
+            pointer-events: none;
+        }
+        
+        .grid-lines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        
+        .grid-v {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--border) 20%, var(--border) 80%, transparent);
+        }
+        
+        .grid-v:nth-child(1) {
+            left: 64px;
+        }
+        
+        .grid-v:nth-child(2) {
+            right: 64px;
+        }
+        
+        .grid-v:nth-child(3) {
+            left: 50%;
+            opacity: 0.4;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+            text-align: center;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--white-border);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 8px 20px;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeUp 1s ease 0.1s forwards;
+        }
+        
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--white);
+            animation: pulse 2s ease infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.7);
+            }
+        }
+        
+        .badge-text {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--white);
+        }
+        
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: clamp(52px, 8vw, 108px);
+            line-height: 1;
+            color: var(--white);
+            opacity: 0;
+            animation: fadeUp 1s ease 0.25s forwards;
+            letter-spacing: -3px;
+        }
+        
+        .hero h1 .line2 {
+            display: block;
+            font-style: italic;
+            font-weight: 400;
+            /* White-to-blue gradient for the italic line */
+            background: linear-gradient(135deg, #ffffff 0%, var(--bright) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-divider {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+            margin: 40px 0;
+            opacity: 0;
+            animation: fadeUp 1s ease 0.4s forwards;
+        }
+        
+        .hero-divider-line {
+            flex: 1;
+            max-width: 80px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--white-border));
+        }
+        
+        .hero-divider-line.right {
+            background: linear-gradient(to left, transparent, var(--white-border));
+        }
+        
+        .hero-divider-diamond {
+            width: 6px;
+            height: 6px;
+            border: 1px solid var(--white);
+            transform: rotate(45deg);
+        }
+        
+        .hero-sub {
+            font-weight: 300;
+            font-size: 17px;
+            line-height: 1.9;
+            color: rgba(255, 255, 255, 0.55);
+            max-width: 500px;
+            margin: 0 auto 48px;
+            opacity: 0;
+            animation: fadeUp 1s ease 0.5s forwards;
+        }
+        
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 1s ease 0.65s forwards;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--royal) 0%, var(--sky) 100%);
+            color: white;
+            text-decoration: none;
+            padding: 17px 52px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(20, 64, 200, 0.4);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--sky) 0%, var(--royal) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 12px 60px rgba(45, 110, 245, 0.55);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-primary span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--white);
+            text-decoration: none;
+            padding: 17px 52px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            border: 1px solid var(--white-border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-ghost::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+        
+        .btn-ghost:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn-ghost:hover::before {
+            transform: translateY(0);
+        }
+        
+        .btn-ghost span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            animation: fadeUp 1s ease 1.2s forwards;
+        }
+        
+        .scroll-mouse {
+            width: 22px;
+            height: 34px;
+            border: 1px solid var(--white-border);
+            border-radius: 11px;
+            display: flex;
+            justify-content: center;
+            padding-top: 6px;
+        }
+        
+        .scroll-wheel {
+            width: 2px;
+            height: 6px;
+            background: var(--white);
+            border-radius: 1px;
+            animation: scrollWheel 1.8s ease infinite;
+        }
+        
+        @keyframes scrollWheel {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+        }
+        
+        .scroll-label {
+            font-size: 9px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--dim);
+        }
+        /* ── MARQUEE ── */
+        
+        .marquee-section {
+            border-top: 1px solid var(--white-border);
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            overflow: hidden;
+            padding: 18px 0;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .marquee-track {
+            display: flex;
+            gap: 80px;
+            animation: marquee 20s linear infinite;
+            width: max-content;
+        }
+        
+        .marquee-item {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            white-space: nowrap;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .marquee-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--white);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+        /* ── STATS ── */
+        
+        .stats {
+            padding: 100px 64px;
+            background: var(--navy);
+            position: relative;
+        }
+        
+        .stats::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 64px;
+            right: 64px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--white-border), transparent);
+        }
+        
+        .stats-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+        }
+        
+        .stat {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 48px 40px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, var(--white), var(--sky));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+        }
+        
+        .stat:hover {
+            background: var(--glass2);
+            border-color: var(--white-border);
+        }
+        
+        .stat:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .stat-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 900;
+            color: var(--white);
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--silver);
+            margin-bottom: 6px;
+        }
+        
+        .stat-sub {
+            font-style: italic;
+            font-size: 13px;
+            color: var(--dim);
+        }
+        /* ── STEPS ── */
+        
+        .steps {
+            padding: 120px 64px;
+            background: var(--navy2);
+            position: relative;
+        }
+        
+        .section-header {
+            max-width: 1100px;
+            margin: 0 auto 80px;
+        }
+        
+        .section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--white);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-label::before {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 1px;
+            background: var(--white);
+        }
+        
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 4.5vw, 58px);
+            font-weight: 700;
+            color: var(--white);
+            line-height: 1.1;
+        }
+        
+        .section-title em {
+            font-weight: 400;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.45);
+        }
+        
+        .steps-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        .step-card {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            padding: 48px 36px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .step-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .step-card:hover {
+            border-color: var(--white-border);
+            transform: translateY(-6px);
+            box-shadow: 0 24px 60px rgba(5, 13, 31, 0.7);
+        }
+        
+        .step-card:hover::after {
+            opacity: 1;
+        }
+        
+        .step-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.05);
+            line-height: 1;
+            margin-bottom: 28px;
+            letter-spacing: -4px;
+        }
+        
+        .step-icon {
+            width: 48px;
+            height: 48px;
+            border: 1px solid var(--white-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.04);
+            transition: all 0.3s;
+        }
+        
+        .step-card:hover .step-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--white);
+        }
+        
+        .step-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 16px;
+        }
+        
+        .step-bar {
+            width: 32px;
+            height: 2px;
+            background: linear-gradient(to right, var(--white), var(--sky));
+            margin-bottom: 20px;
+            transition: width 0.4s;
+        }
+        
+        .step-card:hover .step-bar {
+            width: 64px;
+        }
+        
+        .step-desc {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 300;
+            line-height: 1.85;
+        }
+        /* ── CTA ── */
+        
+        .cta {
+            padding: 140px 64px;
+            background: var(--navy);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .cta-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(20, 64, 200, 0.14) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+        }
+        
+        .cta-box {
+            position: relative;
+            z-index: 10;
+            max-width: 700px;
+            margin: 0 auto;
+            border: 1px solid var(--white-border);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 80px 60px;
+            backdrop-filter: blur(20px);
+        }
+        
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 40px;
+            right: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--white), transparent);
+        }
+        
+        .cta h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(38px, 5vw, 64px);
+            font-weight: 900;
+            color: var(--white);
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        
+        .cta h2 em {
+            font-weight: 400;
+            font-style: italic;
+            background: linear-gradient(135deg, var(--white) 0%, var(--bright) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .cta-sub {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+            font-weight: 300;
+            margin-bottom: 48px;
+            line-height: 1.7;
+        }
+        /* ── FOOTER ── */
+        
+        footer {
+            background: #020912;
+            padding: 72px 64px 40px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer-top {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            padding-bottom: 56px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .footer-brand p {
+            color: var(--dim);
+            font-size: 13px;
+            font-weight: 300;
+            margin-top: 20px;
+            line-height: 1.8;
+            max-width: 260px;
+        }
+        
+        .footer-col h4 {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--white);
+            margin-bottom: 24px;
+        }
+        
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .footer-col ul a,
+        .footer-col ul li {
+            color: var(--dim);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 300;
+            transition: color 0.2s;
+        }
+        
+        .footer-col ul a:hover {
+            color: var(--white);
+        }
+        
+        .footer-bottom {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .footer-bottom p {
+            font-size: 11px;
+            color: var(--dim);
+            letter-spacing: 1px;
+            font-weight: 300;
+        }
+        /* ── ANIMATIONS ── */
+        
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(32px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 900px) {
+            nav {
+                padding: 0 24px;
+            }
+            .nav-center {
+                display: none;
+            }
+            .hero {
+                padding: 100px 24px 80px;
+            }
+            .grid-lines {
+                display: none;
+            }
+            .stats {
+                padding: 60px 24px;
+            }
+            .stats-inner {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+            .steps {
+                padding: 80px 24px;
+            }
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+            .cta {
+                padding: 80px 24px;
+            }
+            .cta-box {
+                padding: 48px 28px;
+            }
+            footer {
+                padding: 48px 24px;
+            }
+            .footer-top {
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+        }
+    
+        /* ── HAMBURGER NAV ── */
+        .hamburger {
+            display: flex; flex-direction: column; justify-content: center;
+            gap: 5px; width: 40px; height: 40px; cursor: pointer;
+            background: none; border: 1px solid var(--border); padding: 10px;
+            transition: border-color 0.3s; z-index: 300;
+        }
+        .hamburger:hover { border-color: var(--sky); }
+        .hamburger span {
+            display: block; height: 1px; background: var(--white);
+            transition: all 0.35s cubic-bezier(.16,1,.3,1); transform-origin: center;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+        .nav-drawer {
+            position: fixed; top: 0; right: 0; width: 320px; height: 100vh;
+            background: #020912; border-left: 1px solid var(--border);
+            z-index: 250; transform: translateX(100%);
+            transition: transform 0.45s cubic-bezier(.16,1,.3,1);
+            display: flex; flex-direction: column;
+            padding: 100px 40px 48px; overflow-y: auto;
+        }
+        .nav-drawer.open { transform: translateX(0); }
+        .nav-overlay {
+            position: fixed; inset: 0; background: rgba(2,9,18,0.75);
+            backdrop-filter: blur(4px); z-index: 240;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s;
+        }
+        .nav-overlay.open { opacity: 1; pointer-events: all; }
+        .drawer-section {
+            font-size: 8px; letter-spacing: 4px; text-transform: uppercase;
+            color: var(--dim); padding: 20px 0 8px;
+        }
+        .drawer-link {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 0; border-bottom: 1px solid var(--border);
+            text-decoration: none; color: var(--muted);
+            font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+            font-weight: 500; transition: color 0.2s;
+        }
+        .drawer-link:hover { color: var(--white); }
+        .drawer-link .arr { font-size: 10px; color: var(--dim); transition: transform 0.2s, color 0.2s; }
+        .drawer-link:hover .arr { transform: translateX(4px); color: var(--sky); }
+        .drawer-link.accent { color: var(--bright); }
+        .drawer-footer { margin-top: auto; padding-top: 32px; border-top: 1px solid var(--border); }
+        .drawer-footer p { font-size: 10px; color: var(--dim); letter-spacing: 1px; line-height: 2; }
+
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas-bg"></canvas>
+    <div class="noise"></div>
+
+    <!-- OVERLAY -->
+    <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
+
+    <!-- DRAWER -->
+    <div class="nav-drawer" id="navDrawer">
+        <div class="drawer-section">Navigation</div>
+        <a href="index.html" class="drawer-link">Accueil <span class="arr">→</span></a>
+        <a href="fleet.html" class="drawer-link">Notre flotte <span class="arr">→</span></a>
+        <a href="#a-propos" class="drawer-link" onclick="closeMenu()">À propos <span class="arr">→</span></a>
+        <a href="#services" class="drawer-link" onclick="closeMenu()">Services <span class="arr">→</span></a>
+        <a href="#partenaires" class="drawer-link" onclick="closeMenu()">Partenaires <span class="arr">→</span></a>
+        <a href="#faq" class="drawer-link" onclick="closeMenu()">FAQ <span class="arr">→</span></a>
+        <div class="drawer-section">Légal</div>
+        <a href="confidentialite.html" class="drawer-link">Confidentialité <span class="arr">→</span></a>
+        <a href="conditions.html" class="drawer-link">Conditions d'utilisation <span class="arr">→</span></a>
+        <div class="drawer-section">Compte</div>
+        <a href="mon-compte.html" class="drawer-link accent">Mon compte <span class="arr">→</span></a>
+        <div class="drawer-footer">
+            <p>© 2026 NexDrive<br>Québec, Canada</p>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav id="navbar">
+        <a href="index.html" class="logo" style="display:flex;align-items:center;text-decoration:none;">
+            <img src="nexdrive-logo-horizontal.svg" alt="NexDrive" style="height:45px;width:auto;" />
+        </a>
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-glow" id="heroGlow"></div>
+        <div class="hero-glow2"></div>
+        <div class="grid-lines">
+            <div class="grid-v"></div>
+            <div class="grid-v"></div>
+            <div class="grid-v"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <div class="badge-dot"></div>
+                <span class="badge-text">Location de véhicules premium — Québec, Canada</span>
+            </div>
+            <h1>L'excellence<span class="line2">automobile</span></h1>
+            <div class="hero-divider">
+                <div class="hero-divider-line"></div>
+                <div class="hero-divider-diamond"></div>
+                <div class="hero-divider-line right"></div>
+            </div>
+            <p class="hero-sub">Une flotte de véhicules haut de gamme, une réservation en quelques clics, un contrat envoyé automatiquement.</p>
+            <div class="hero-actions">
+                <a href="fleet.html" class="btn-primary"><span>Voir la flotte</span></a>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="scroll-mouse">
+                <div class="scroll-wheel"></div>
+            </div>
+            <span class="scroll-label">Défiler</span>
+        </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee-section">
+        <div class="marquee-track">
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Véhicules Premium</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Contrat Automatique</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Tout le Québec</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Réservation en ligne</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Premium Vehicles</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Automatic Contract</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>All over Quebec</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Online Booking</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Véhicules Premium</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Contrat Automatique</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Tout le Québec</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Réservation en ligne</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Premium Vehicles</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Automatic Contract</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>All over Quebec</div>
+            <div class="marquee-item">
+                <div class="marquee-dot"></div>Online Booking</div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <section class="stats">
+        <div class="stats-inner">
+            <div class="stat reveal">
+                <div class="stat-num"><span class="count-up" data-target="100">0</span>%</div>
+                <div class="stat-label">Véhicules premium</div>
+                <div class="stat-sub">Premium vehicles</div>
+            </div>
+            <div class="stat reveal">
+                <div class="stat-num"><span class="count-up" data-target="24">0</span>h</div>
+                <div class="stat-label">Contrat automatique</div>
+                <div class="stat-sub">Automatic contract</div>
+            </div>
+            <div class="stat reveal">
+                <div class="stat-num" style="font-size:44px">QC</div>
+                <div class="stat-label">Tout le Québec</div>
+                <div class="stat-sub">All over Quebec</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STEPS -->
+    <section class="steps">
+        <div class="section-header reveal">
+            <div class="section-label">Processus / Process</div>
+            <h2 class="section-title">Comment ça<br><em>fonctionne</em></h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card reveal">
+                <div class="step-num">01</div>
+                <div class="step-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="8" r="4" stroke="#fff" stroke-width="1.2"/>
+            <path d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+                </div>
+                <div class="step-title">Choisissez votre véhicule</div>
+                <div class="step-bar"></div>
+                <p class="step-desc">Parcourez notre flotte et sélectionnez le véhicule qui correspond à vos besoins et votre budget.</p>
+            </div>
+            <div class="step-card reveal">
+                <div class="step-num">02</div>
+                <div class="step-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="3" y="4" width="14" height="13" rx="1" stroke="#fff" stroke-width="1.2"/>
+            <path d="M7 2v4M13 2v4M3 9h14" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M7 13h6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+                </div>
+                <div class="step-title">Réservez en ligne</div>
+                <div class="step-bar"></div>
+                <p class="step-desc">Remplissez le formulaire, choisissez vos dates et votre point de rendez-vous le plus proche.</p>
+            </div>
+            <div class="step-card reveal">
+                <div class="step-num">03</div>
+                <div class="step-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 4h12v12H4z" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M7 9l2 2 4-4" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+                </div>
+                <div class="step-title">Recevez votre contrat</div>
+                <div class="step-bar"></div>
+                <p class="step-desc">Un contrat complet est généré automatiquement et envoyé à votre adresse email en quelques secondes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="cta-bg"></div>
+        <div class="cta-box reveal">
+            <div class="section-label" style="justify-content:center;margin-bottom:24px">Prêt à commencer</div>
+            <h2>Réservez<br><em>maintenant</em></h2>
+            <p class="cta-sub">Accédez à la meilleure flotte de véhicules premium au Québec.<br>Réservation en ligne, contrat automatique.</p>
+            <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+                <a href="fleet.html" class="btn-primary"><span>Voir la flotte</span></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-top">
+            <div class="footer-brand">
+                <a href="index.html" style="display:flex;align-items:center;text-decoration:none;">
+                    <img src="nexdrive-logo-navy.svg" alt="NexDrive" style="height:38px;width:auto;" />
+                </a>
+                <p>Location de véhicules premium au Québec, Canada. Réservation en ligne, contrat automatique.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Navigation</h4>
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="fleet.html">Flotte</a></li>
+                    <li><a href="login.html">Connexion</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <ul>
+                    <li>À compléter</li>
+                    <li>À compléter</li>
+                    <li>Québec, Canada</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Légal</h4>
+                <ul>
+                    <li>Conditions</li>
+                    <li>Confidentialité</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 NexDrive — Tous droits réservés</p>
+            <p>Québec, Canada</p>
+        </div>
+    </footer>
+
+    <script>
+        // CANVAS PARTICLES
+        const canvas = document.getElementById('canvas-bg')
+        const ctx = canvas.getContext('2d')
+        let W, H, particles = []
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight
+        }
+        resize();
+        window.addEventListener('resize', () => {
+            resize();
+            initParticles()
+        })
+
+        class Particle {
+            constructor() {
+                this.reset(true)
+            }
+            reset(init) {
+                this.x = Math.random() * W
+                this.y = init ? Math.random() * H : (Math.random() > 0.5 ? 0 : H)
+                this.size = Math.random() * 1.4 + 0.3
+                this.speedX = (Math.random() - 0.5) * 0.25
+                this.speedY = (Math.random() - 0.5) * 0.25
+                this.opacity = Math.random() * 0.3 + 0.06
+                this.color = Math.random() > 0.6 ? '255,255,255' : Math.random() > 0.5 ? '45,110,245' : '91,143,255'
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY
+                if (this.x < -10 || this.x > W + 10 || this.y < -10 || this.y > H + 10) this.reset(false)
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+                ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+                ctx.fill()
+            }
+        }
+
+        function initParticles() {
+            particles = Array.from({
+                length: 70
+            }, () => new Particle())
+        }
+        initParticles()
+
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x,
+                        dy = particles[i].y - particles[j].y
+                    const dist = Math.sqrt(dx * dx + dy * dy)
+                    if (dist < 110) {
+                        ctx.beginPath()
+                        ctx.strokeStyle = `rgba(255,255,255,${0.05 * (1 - dist/110)})`
+                        ctx.lineWidth = 0.5
+                        ctx.moveTo(particles[i].x, particles[i].y)
+                        ctx.lineTo(particles[j].x, particles[j].y)
+                        ctx.stroke()
+                    }
+                }
+            }
+        }
+
+        ;
+        (function animCanvas() {
+            ctx.clearRect(0, 0, W, H)
+            drawLines();
+            particles.forEach(p => {
+                p.update();
+                p.draw()
+            })
+            requestAnimationFrame(animCanvas)
+        })()
+
+        // SCROLL REVEAL
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) setTimeout(() => entry.target.classList.add('visible'), i * 120)
+            })
+        }, {
+            threshold: 0.08
+        })
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+        // COUNT UP
+        const countObs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target,
+                        target = parseInt(el.dataset.target)
+                    const start = performance.now();
+                    (function step(now) {
+                        const p = Math.min((now - start) / 1800, 1)
+                        el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target)
+                        if (p < 1) requestAnimationFrame(step)
+                    })(performance.now())
+                    countObs.unobserve(el)
+                }
+            })
+        }, {
+            threshold: 0.5
+        })
+        document.querySelectorAll('.count-up').forEach(el => countObs.observe(el))
+
+        // NAVBAR
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50)
+        })
+
+        // PARALLAX GLOW
+        document.addEventListener('mousemove', e => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 30
+            const y = (e.clientY / window.innerHeight - 0.5) * 30
+            const glow = document.getElementById('heroGlow')
+            if (glow) glow.style.transform = `translate(calc(-50% + ${x}px), calc(-60% + ${y}px))`
+        })
+    
+        // HAMBURGER MENU
+        function toggleMenu() {
+            const h = document.getElementById('hamburger')
+            const d = document.getElementById('navDrawer')
+            const o = document.getElementById('navOverlay')
+            h.classList.toggle('open')
+            d.classList.toggle('open')
+            o.classList.toggle('open')
+            document.body.style.overflow = d.classList.contains('open') ? 'hidden' : ''
+        }
+        function closeMenu() {
+            document.getElementById('hamburger').classList.remove('open')
+            document.getElementById('navDrawer').classList.remove('open')
+            document.getElementById('navOverlay').classList.remove('open')
+            document.body.style.overflow = ''
+        }
+</script>
+</body>
+
+</html>
